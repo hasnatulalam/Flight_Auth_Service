@@ -7,7 +7,7 @@ const app = express();
 
 const prepareAndStartServer =()=>{
 app.listen(PORT,()=>{
-      app.use(bodyParser);
+      app.use(bodyParser.json());
       app.use(bodyParser.urlencoded({extended:true}));
      app.use('/api',apiRoutes);
      console.log(`server started at ${PORT}`);

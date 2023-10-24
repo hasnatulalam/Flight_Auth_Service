@@ -1,4 +1,7 @@
-const UserRepository=require('../repository/user-repository')
+const UserRepository=require('../repository/user-repository');
+const {JWT_KEY}=require('../config/serverConfig');
+const jwt =require('jsonwebtoken');
+const bcrypt =require('bcrypt')
 
 class UserService{
     constructor(){
@@ -12,6 +15,53 @@ class UserService{
                  console.log('Something went wrong in the service');
                  throw error
             }
+    }
+    async signIn(email,plainPassword){
+        try {
+           //step->1 fetch the user using the email
+           const user =await this.userRepository.getByEmail(email);
+           //step 2  compare incoming password to stores encrypted password
+           const passwordsMatch =this.checkPassword(plainPassword,user.password);
+
+           if(!passwordsMatch){
+            console.log('Password does not match');
+            throw {error: 'incorrect password'}
+           }
+             //step 3 if password match then create a token and send it to the user
+            const newJWT =this.createToken({email:user.email,id:user.id});
+            return newJWT;
+
+        } catch (error) {
+           console.log('Something went wrong in signIn');
+           throw error
+        }
+   }
+     createToken(user){
+           try {
+              const result =jwt.sign(user,JWT_KEY,{expiresIn: '1h'});
+              return result;
+           } catch (error) {
+            console.log('Something went wrong in the token creation');
+            throw error
+           }
+    }
+    verifyToken(){
+       try {
+          const response =jwt.verify(token,JWT_KEY);
+          return response;
+       } catch (error) {
+        console.log('Something went wrong in the token validation');
+        throw error
+       }
+    }
+   
+    checkPassword(userInputPlainPassword,encryptedPassword){
+          try {
+            return bcrypt.compareSync(userInputPlainPassword,encryptedPassword)
+          } catch (error) {
+            console.log('Something went wrong in password comparison');
+            throw error
+          }
     }
 }
 
